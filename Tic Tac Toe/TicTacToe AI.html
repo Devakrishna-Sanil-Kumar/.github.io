@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tic Tac Toe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Akronim"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body onload="startgame()">
+    <h1 id="heading">Tic Tac Toe With AI</h1>
+    <div class="d-grid gap-2 col-2 mx-auto">
+      <button type="button" class="btn btn-outline-warning" onclick="window.location.href='TicTacToe.html';">Play two player</button>
+    </div>
+    <div class="main d-flex flex-column justify-content-center" style="margin-top: 3vw;">
+      <div class="" id="board">
+        <div class="row m-0 d-flex justify-content-between">
+          <div class="col-4 square" id="square1"></div>
+          <div class="col-4 square" id="square2"></div>
+          <div class="col-4 square" id="square3"></div>
+        </div>
+        <div class="row m-0 d-flex justify-content-between">
+          <div class="col-4 square" id="square4"></div>
+          <div class="col-4 square" id="square5"></div>
+          <div class="col-4 square" id="square6"></div>
+        </div>
+        <div class="row m-0 d-flex justify-content-between">
+          <div class="col-4 square" id="square7"></div>
+          <div class="col-4 square" id="square8"></div>
+          <div class="col-4 square" id="square9"></div>
+        </div>
+        <div class="row m-0 d-flex justify-content-between">
+          <div class="col-6 text-center mt-3" id="undobuttondiv"></div>
+          <div class="col-6 text-center mt-3" id="resetbuttondiv"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const squares = document.querySelectorAll(".square");
+      var currentplayer = "X";
+      var prevsquare = "";
+      var currentsquare = "";
+      var clickcount = 0;
+      var gameon = true;
+      var board = ["", "", "", "", "", "", "", "", ""];
+      var ai = "O";
+      var human = "X";
+      var scores = {
+        X: -10,
+        O: 10,
+        tie: 0
+      };
+
+      function undo() {
+        if (clickcount == 2) {
+          location.reload();
+        }
+        prevsquare.innerHTML = "";
+        currentsquare.innerHTML = "";
+        var squareidnum = prevsquare.id.slice(6);
+        board[squareidnum - 1] = "";
+        var squareidnum = currentsquare.id.slice(6);
+        board[squareidnum - 1] = "";
+        var undoel = document.querySelector("#undobutton");
+        undoel.remove();
+        clickcount--;
+        clickcount--;
+      }
+
+      function humanmark(e) {
+        currentplayer = human
+        clickcount++;
+        var square = e.target;
+        prevsquare = square;
+        if (square.innerHTML != "") {
+          return;
+        }
+        square.innerHTML = human;
+        square.style.color = "#ff0000";
+        square.style.fontSize = "8vw";
+        var squareidnum = square.id.slice(6);
+        board[squareidnum - 1] = human;
+      }
+
+      function aimark() {
+        currentplayer = ai
+        clickcount++;
+        var aibotmove = aimove();
+        console.log('AI ' + aibotmove);
+        if(aibotmove + 1) {
+          var square = document.querySelector("#square" + (aibotmove + 1));
+          currentsquare = square;
+          square.innerHTML = ai;
+          square.style.color = "#0000ff";
+          square.style.fontSize = "8vw";
+          board[aibotmove] = ai;
+        }
+      }
+
+      function aio(e) {
+        if (e.target.innerHTML != "") {
+          return;
+        }
+        humanmark(e);
+        if (clickcount == 1) {
+          var div = document.querySelector("#resetbuttondiv");
+          var resetel = document.createElement("button");
+          resetel.id = "resetbutton";
+          resetel.classList = "btn btn-outline-info";
+          resetel.innerHTML = "Reset";
+          resetel.style.fontSize = "2vw";
+          resetel.style.color = "#007be1";
+          resetel.onclick = function () {
+            location.reload();
+          };
+          div.appendChild(resetel);
+        }
+        var undobutexist = !!document.querySelector("#undobutton");
+        if (!undobutexist) {
+          var undoel = document.createElement("button");
+          undoel.id = "undobutton";
+          undoel.classList = "btn btn-outline-info";
+          undoel.innerHTML = "Undo";
+          undoel.style.fontSize = "2vw";
+          undoel.style.color = "#007be1";
+          undoel.onclick = function () {
+            undo();
+          };
+          var div = document.querySelector("#undobuttondiv");
+          div.appendChild(undoel);
+        }
+        if (checkForWinner()[0]) {
+          var undoel = document.querySelector("#undobutton");
+          undoel.remove();
+          var body = document.querySelector("body");
+          var winel = document.createElement("div");
+          winel.innerHTML = `${currentplayer} wins!`;
+          winel.style.fontSize = "5vw";
+          winel.style.textAlign = "center";
+          if (currentplayer == "X") {
+            winel.style.color = "#ff0000";
+          } else {
+            winel.style.color = "#0000ff";
+          }
+          body.appendChild(winel);
+          gameon = false;
+        } else if (checkForDraw()) {
+          var undoel = document.querySelector("#undobutton");
+          undoel.remove();
+          var body = document.querySelector("body");
+          var drawel = document.createElement("div");
+          drawel.innerHTML = `No winner. It's a draw!`;
+          drawel.style.fontSize = "5vw";
+          drawel.style.textAlign = "center";
+          drawel.style.color = "orange";
+          body.appendChild(drawel);
+          gameon = false;
+        } else {
+          aimark();
+          if (checkForWinner()[0]) {
+            var undoel = document.querySelector("#undobutton");
+            undoel.remove();
+            var body = document.querySelector("body");
+            var winel = document.createElement("div");
+            winel.innerHTML = `${currentplayer} wins!`;
+            winel.style.fontSize = "5vw";
+            winel.style.textAlign = "center";
+            if (currentplayer == "X") {
+              winel.style.color = "#ff0000";
+            } else {
+              winel.style.color = "#0000ff";
+            }
+            body.appendChild(winel);
+            gameon = false;
+        } else if (checkForDraw()) {
+            var undoel = document.querySelector("#undobutton");
+            undoel.remove();
+            var body = document.querySelector("body");
+            var drawel = document.createElement("div");
+            drawel.innerHTML = `No winner. It's a draw!`;
+            drawel.style.fontSize = "5vw";
+            drawel.style.textAlign = "center";
+            drawel.style.color = "orange";
+            body.appendChild(drawel);
+            gameon = false;
+          }
+        }
+      }
+
+      function aimove() {
+        let bestscore = -Infinity;
+        let bestmove;
+        for (let i = 0; i < 9; i++) {
+          if (board[i] == "") {
+            board[i] = ai;
+            let score = minimax(board, false);
+            board[i] = "";
+            if (score > bestscore) {
+              bestscore = score;
+              bestmove = i;
+            }
+          }
+        }
+        return bestmove;
+      }
+
+      function minimax(board, ismaxing) {
+        let result = checkForWinner();
+        if (result[0]) {
+          return scores[result[1]];
+        }
+        if (checkForDraw()) {
+          return 0;
+        }
+        if (ismaxing) {
+          let bscore = -Infinity;
+          for (let i = 0; i < 9; i++) {
+            if (board[i] == "") {
+              board[i] = ai;
+              let tscore = minimax(board, false);
+              board[i] = "";
+              bscore = Math.max(tscore, bscore);
+            }
+          }
+          return bscore;
+        } else {
+          let bscore = Infinity;
+          for (let i = 0; i < 9; i++) {
+            if (board[i] == "") {
+              board[i] = human;
+              let tscore = minimax(board, true);
+              board[i] = "";
+              bscore = Math.min(tscore, bscore);
+            }
+          }
+          return bscore;
+        }
+      }
+
+      function checkForWinner() {
+        const lines = [
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7, 8],
+          [0, 3, 6],
+          [1, 4, 7],
+          [2, 5, 8],
+          [0, 4, 8],
+          [2, 4, 6],
+        ];
+        for (let i = 0; i < lines.length; i++) {
+          let [a, b, c] = lines[i];
+          if (
+            board[a] != "" &&
+            board[a] == board[b] &&
+            board[b] == board[c]
+          ) {
+            return [true, board[a]];
+          }
+        }
+        return [false];
+      }
+
+      function checkForDraw() {
+        for (let i = 0; i < board.length; i++) {
+          if (board[i] == "") {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function startgame() {
+        for (let i = 0; i < squares.length; i++) {
+          squares[i].addEventListener("click", function (e) {
+            if (gameon) {
+              aio(e);
+            }
+          });
+        }
+      }
+    </script>
+    <style>
+      #heading {
+        text-align: center;
+        color: #007be1;
+      }
+      @media screen and (min-width: 601px) {
+        #heading {
+          font-size: 5vw;
+        }
+      }
+      @media screen and (max-width: 600px) {
+        #heading {
+          font-size: 15vw;
+        }
+      }
+      body {
+        background-color: #121213;
+        font-family: "Akronim";
+      }
+      #board {
+        width: 320px;
+        margin: 0 auto;
+      }
+      .square {
+        height: 110px;
+        border: 1px solid #686d75;
+        box-sizing: border-box;
+        font-size: 80px;
+        text-align: center;
+        line-height: 125px;
+        cursor: pointer;
+      }
+      .square:hover {
+        background-color: #686d75;
+      }
+      
+    </style>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
